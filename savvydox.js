@@ -182,7 +182,7 @@ module.exports.getEvent = function(context, eventid, completionHandler, errorHan
 };
 	
 module.exports.getDocument = function(context, documentid, completionHandler, errorHandler) {
-	var docurl = savvydox.sdurl("/documents/" + event.payload.document);
+	var docurl = savvydox.sdurl("/documents/" + documentid);
 	request(docurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
