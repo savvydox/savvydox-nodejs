@@ -166,7 +166,7 @@ module.exports.getUser = function(userid, completionHandler, errorHandler) {
 	});
 };
 	
-module.exports.getEvent = function(context, eventid, completionHandler, errorHandler) {
+module.exports.getEvent = function(eventid, completionHandler, errorHandler) {
 	request(eventurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
@@ -181,7 +181,7 @@ module.exports.getEvent = function(context, eventid, completionHandler, errorHan
 	});
 };
 	
-module.exports.getDocument = function(context, documentid, completionHandler, errorHandler) {
+module.exports.getDocument = function(documentid, completionHandler, errorHandler) {
 	var docurl = savvydox.sdurl("/documents/" + documentid);
 	request(docurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
