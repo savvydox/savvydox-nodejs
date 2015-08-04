@@ -33,36 +33,22 @@ module.exports.login = function(host, login, password, completionHandler, errorH
 };
 
 module.exports.postDocument = function(document, contentPath, sourcePath, completionHandler, errorHandler) {
-	var originaldocid = document.data.public.workingCopy.originalDocument;
-
-	var origdocurl = savvydox.sdurl("/documents/" + originaldocid);
-	request(origdocurl, function(error, response, body) {
-		if (error) {
-			console.log("Fetching original document failed: ");
-			console.log(error);
-			process.exit(1);
-		}
-
-		var origdoc = JSON.parse(body);
-
-		var newTitle = document.data.public.workingCopy.releaseTitle;
-		if (newTitle) {
-			origdoc.title = newTitle;
-		}
-
-		// Update original document properties
-
+	var docurl = savvydox.sdurl("/documents/" + document.id);
+	request(docurl, function(error, response, body) {
 		var formData = {
-			document: JSON.stringify(origdoc), 
-			content: {
+			document: JSON.stringify(document), 
+		};
+
+		if (contentPath) {
+			formData.content = {
 				value: 	fs.createReadStream(contentPath), 
 				options: {
 					filename: 'content.pdf',
 					contentType: 'application/pdf'
 				}
-			}
-		};
-
+			};
+		}
+		
 		if (sourcePath) {
 			formData.source = {
 				value: 	fs.createReadStream(sourcePath), 
@@ -73,7 +59,7 @@ module.exports.postDocument = function(document, contentPath, sourcePath, comple
 			};
 		}
 
-		request.post({url: savvydox.sdurl("/documents/" + origdoc.id), formData: formData}, function(error, response, body) {
+		request.post({url: docurl, formData: formData}, function(error, response, body) {
 			if (error) {
 				if (errorHandler) {
 					errorHandler(error);
@@ -81,6 +67,7 @@ module.exports.postDocument = function(document, contentPath, sourcePath, comple
 				return;
 			}
 	
+			var newdoc = JSON.parse(body);
 			completionHandler(newdoc);
 		});
 	});
@@ -143,7 +130,6 @@ module.exports.downloadDocumentContent = function(document, path, completionHand
 				completionHandler(contentpath, srcdest);
 			});
 		} else {
-			console.log("Working copy has no source");
 			completionHandler(contentpath);
 		}
 	});
