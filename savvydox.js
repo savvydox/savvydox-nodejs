@@ -123,7 +123,7 @@ module.exports.downloadDocumentContent = function(document, path, completionHand
 				srcfn = document.sourceFileName;
 			}
 
-			var srcdest = path.name + "/" + srcfn;
+			var srcdest = path + "/" + srcfn;
 			var srcfile = fs.createWriteStream(srcdest)
 			var srcreq = request(srcurl).pipe(srcfile);
 			srcfile.on('finish', function() {
