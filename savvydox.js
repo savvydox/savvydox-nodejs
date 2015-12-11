@@ -1,5 +1,9 @@
 #!/usr/local/bin/node
 
+/**
+ *  Simple library for accessing SavvyDox's REST web service.
+ */
+
 var request = require('request');
 var fs = require('fs');
 var os = require('os');
@@ -17,10 +21,13 @@ var savvydox = module.exports;
 module.exports.login = function(host, login, password, completionHandler, errorHandler) {
 	savvydox.host = host;
 	
-	request.post(module.exports.host + "2/login", {
+	request.post(module.exports.host + "2/login?clientApiVersion=2", {
 		'auth': { 'user': login, 'pass': password, 'sendImmediately': true } }, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
+				if (!error) {
+					error = "Response: " + response.statusCode;
+				}
 				errorHandler(error);
 			}
 			return;
@@ -29,6 +36,44 @@ module.exports.login = function(host, login, password, completionHandler, errorH
 		savvydox.user = JSON.parse(body);
 		
 		completionHandler(JSON.parse(body));
+	});
+};
+
+module.exports.register = function(host, login, password, email, completionHandler, errorHandler) {
+	savvydox.host = host;
+	
+	var formData = {
+		'user': JSON.stringify({ 'loginName': login, 'password': password, 'primaryEmail':email })
+	};
+
+	request.post({ 'url': module.exports.host + "2/registeruser?clientApiVersion=2", 
+		formData: formData, },
+		function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (!error) {
+					error = "Response: " + response.statusCode;
+				}
+				errorHandler(error);
+			}
+			return;
+		}
+
+		savvydox.user = JSON.parse(body);
+		
+		completionHandler(JSON.parse(body));
+	});
+};
+
+module.exports.getServerInfo = function(completionHandler, errorHandler) {
+	var url = module.exports.host + "2/serverinfo";
+	request.get(url, function(error, response, body) {
+		if (error) {
+			errorHandler(error);
+			return;
+		}
+		
+		completionHandler(JSON.parse(body));	
 	});
 };
 
@@ -197,7 +242,7 @@ module.exports.getCollections = function(completionHandler, errorHandler) {
 };
 			
 module.exports.getDocumentRecipients = function(documentid, completionHandler, errorHandler) {
-	var recipurl = savvydox.sdurl("/documents/" + event.payload.document + "/recipients");
+	var recipurl = savvydox.sdurl("/documents/" + documentid + "/recipients");
 	recipurl += "&format=decompose";
 	request(recipurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
@@ -208,7 +253,7 @@ module.exports.getDocumentRecipients = function(documentid, completionHandler, e
 		}
 	
 		var recipients = JSON.parse(body);
-		return recipients;
+		completionHandler(recipients);
 	});
 };
 			
