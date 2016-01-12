@@ -252,15 +252,14 @@ module.exports.getDocumentRecipients = function(documentid, completionHandler, e
 			return;
 		}
 	
-		var recipients = JSON.parse(body);
-		completionHandler(recipients);
+		var response = JSON.parse(body);
+		completionHandler(response);
 	});
 };
 			
 module.exports.getDocumentTasks = function(documentid, completionHandler, errorHandler) {
 	var tasksurl = savvydox.sdurl("/usertasks/document/" + event.payload.document);
 	tasksurl += "&format=decompose";
-	console.log("Requesting tasks: " + tasksurl);
 
 	request(tasksurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
@@ -270,7 +269,64 @@ module.exports.getDocumentTasks = function(documentid, completionHandler, errorH
 			return;
 		}
 
-		var tasks = JSON.parse(body);
-		return tasks;
+		completionHandler(tasks);
 	});
 }
+
+	
+module.exports.getMyGroups = function(completionHandler, errorHandler) {
+	var groupsurl = savvydox.sdurl("/groups");
+
+	request(groupsurl, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var groups = JSON.parse(body);
+		completionHandler(groups);
+	});
+}
+
+module.exports.postGroup = function(group, completionHandler, errorHandler) {
+	var groupsurl = savvydox.sdurl("/groups");
+
+	var formData = {
+		'group': JSON.stringify(group)
+	};
+
+	request.post({url: groupsurl, formData: formData}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var group = JSON.parse(body);
+		completionHandler(group);
+	});
+}
+
+module.exports.putGroup = function(group, completionHandler, errorHandler) {
+	var groupsurl = savvydox.sdurl("/groups/" + group.id);
+
+	var formData = {
+		'group': JSON.stringify(group)
+	};
+
+	request.put({url: groupsurl, formData: formData}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(response);
+			}
+			return;
+		}
+
+		var group = JSON.parse(body);
+		completionHandler(group);
+	});
+}
+
