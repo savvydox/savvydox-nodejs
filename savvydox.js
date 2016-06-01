@@ -65,8 +65,12 @@ module.exports.register = function(host, login, password, email, completionHandl
 	});
 };
 
-module.exports.getServerInfo = function(completionHandler, errorHandler) {
+module.exports.getServerInfo = function(completionHandler, errorHandler, detailLevel) {
 	var url = module.exports.host + "2/serverinfo";
+	if (detailLevel) {
+		url += "?details=" + detailLevel;
+	}
+
 	request.get(url, function(error, response, body) {
 		if (error) {
 			errorHandler(error);
