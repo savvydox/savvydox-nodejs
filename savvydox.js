@@ -261,6 +261,22 @@ module.exports.getDocumentRecipients = function(documentid, completionHandler, e
 	});
 };
 			
+module.exports.getCollectionRecipients = function(collectionid, completionHandler, errorHandler) {
+	var recipurl = savvydox.sdurl("/collections/" + collectionid + "/recipients");
+	recipurl += "&format=decompose";
+	request(recipurl, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+	
+		var response = JSON.parse(body);
+		completionHandler(response);
+	});
+};
+
 module.exports.getDocumentTasks = function(documentid, completionHandler, errorHandler) {
 	var tasksurl = savvydox.sdurl("/usertasks/document/" + event.payload.document);
 	tasksurl += "&format=decompose";
@@ -275,7 +291,7 @@ module.exports.getDocumentTasks = function(documentid, completionHandler, errorH
 
 		completionHandler(tasks);
 	});
-}
+};
 
 	
 module.exports.getMyGroups = function(completionHandler, errorHandler) {
@@ -292,7 +308,7 @@ module.exports.getMyGroups = function(completionHandler, errorHandler) {
 		var groups = JSON.parse(body);
 		completionHandler(groups);
 	});
-}
+};
 
 module.exports.postGroup = function(group, completionHandler, errorHandler) {
 	var groupsurl = savvydox.sdurl("/groups");
@@ -312,7 +328,7 @@ module.exports.postGroup = function(group, completionHandler, errorHandler) {
 		var group = JSON.parse(body);
 		completionHandler(group);
 	});
-}
+};
 
 module.exports.putGroup = function(group, completionHandler, errorHandler) {
 	var groupsurl = savvydox.sdurl("/groups/" + group.id);
@@ -332,5 +348,146 @@ module.exports.putGroup = function(group, completionHandler, errorHandler) {
 		var group = JSON.parse(body);
 		completionHandler(group);
 	});
-}
+};
+
+module.exports.getDocumentsInCollection = function(collectionID, completionHandler, errorHandler) {
+	var groupsurl = savvydox.sdurl("/collections/" + collectionID + "/documents");
+
+	request(groupsurl, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var response = JSON.parse(body);
+		completionHandler(response);
+	});
+
+};
+
+module.exports.postCollection = function(collection, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/collections");
+
+	var formData = {
+		'collection': JSON.stringify(collection)
+	};
+
+	request.post({url: url, formData: formData}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		var responseBody = JSON.parse(body);
+		completionHandler(responseBody);
+	});
+};
+
+module.exports.putCollection = function(collection, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/collections/" + collection.id);
+
+	var formData = {
+		'collection': JSON.stringify(collection)
+	};
+
+	request.put({url: url, formData: formData}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		var responseBody = JSON.parse(body);
+		completionHandler(responseBody);
+	});
+};
+
+
+module.exports.addDocumentToCollection = function(documentID, collectionID, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/collections/" + collectionID + "/documents");
+
+	var formData = {
+		'document': documentID
+	};
+
+	request.post({url: url, body: "document=" + JSON.stringify(formData), headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		if (response.statusCode == 204) {
+			completionHandler(response);
+		} else {
+			errorHandler(response);
+		}
+	});
+};
+
+module.exports.removeDocumentFromCollection = function(documentID, collectionID, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/collections/" + collectionID + "/documents/" + documentID);
+
+	request.del({url: url}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		if (response.statusCode == 204) {
+			completionHandler(response);
+		} else {
+			errorHandler(response);
+		}
+	});
+};
+
+module.exports.deleteCollection = function(collectionID, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/collections/" + collectionID);
+
+	request.del({url: url}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		if (response.statusCode == 204) {
+			completionHandler(response);
+		} else {
+			errorHandler(response);
+		}
+	});
+};
 
