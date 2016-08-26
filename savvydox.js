@@ -491,3 +491,74 @@ module.exports.deleteCollection = function(collectionID, completionHandler, erro
 	});
 };
 
+module.exports.postNotes = function(notes, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/notes");
+
+	var formData = {
+		'note': JSON.stringify(notes)
+	};
+
+	request.post({url: url, formData: formData}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		var responseBody = JSON.parse(body);
+		completionHandler(responseBody);
+	});
+};
+
+module.exports.getNote = function(noteid, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/notes/" + noteid);
+
+	request(url, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var user = JSON.parse(body);
+		completionHandler(user);
+	});
+};
+
+module.exports.getNotes = function(completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/notes");
+
+	request(url, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var user = JSON.parse(body);
+		completionHandler(user);
+	});
+};
+
+module.exports.getDocumentNotes = function(docid, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/documents/" + docid + "/notes");
+
+	request(url, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var user = JSON.parse(body);
+		completionHandler(user);
+	});
+};
