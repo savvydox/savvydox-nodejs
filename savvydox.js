@@ -310,6 +310,22 @@ module.exports.getMyGroups = function(completionHandler, errorHandler) {
 	});
 };
 
+module.exports.getGroup = function(groupid, completionHandler, errorHandler) {
+	var groupsurl = savvydox.sdurl("/groups/" + groupid);
+
+	request(groupsurl, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var response = JSON.parse(body);
+		completionHandler(response);
+	});
+};
+
 module.exports.postGroup = function(group, completionHandler, errorHandler) {
 	var groupsurl = savvydox.sdurl("/groups");
 
