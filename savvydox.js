@@ -380,7 +380,20 @@ module.exports.getDocumentsInCollection = function(collectionID, completionHandl
 		var response = JSON.parse(body);
 		completionHandler(response);
 	});
+};
 
+module.exports.getAllDocuments = function(completionHandler, errorHandler) {
+	request(savvydox.sdurl("/documents"), function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				errorHandler(error);
+			}
+			return;
+		}
+
+		var response = JSON.parse(body);
+		completionHandler(response);
+	});
 };
 
 module.exports.postCollection = function(collection, completionHandler, errorHandler) {
@@ -500,6 +513,29 @@ module.exports.deleteCollection = function(collectionID, completionHandler, erro
 		}
 
 		if (response.statusCode == 204) {
+			completionHandler(response);
+		} else {
+			errorHandler(response);
+		}
+	});
+};
+
+module.exports.deleteDocument = function(documentID, completionHandler, errorHandler) {
+	var url = savvydox.sdurl("/documents/" + documentID);
+
+	request.del({url: url}, function(error, response, body) {
+		if (error || response.statusCode >= 400) {
+			if (errorHandler) {
+				if (error) {
+					errorHandler(error);
+				} else {
+					errorHandler(response);
+				}
+			}
+			return;
+		}
+
+		if (response.statusCode == 200) {
 			completionHandler(response);
 		} else {
 			errorHandler(response);
