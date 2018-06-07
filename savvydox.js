@@ -535,7 +535,7 @@ module.exports.deleteDocument = function(documentID, completionHandler, errorHan
 			return;
 		}
 
-		if (response.statusCode == 200) {
+		if (response.statusCode == 204) {
 			completionHandler(response);
 		} else {
 			errorHandler(response);
