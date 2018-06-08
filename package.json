@@ -19,8 +19,9 @@
     "url": "https://github.com/savvydox/savvydox-nodejs/issues"
   },
   "homepage": "https://github.com/savvydox/savvydox-nodejs#readme",
-	"dependencies": {
-	  "request": "2.60.0",
-	  "guid":   "0.0.12"
-	}
+  "dependencies": {
+    "form-data": "^2.3.2",
+    "guid": "0.0.12",
+    "request": "2.60.0"
+  }
 }

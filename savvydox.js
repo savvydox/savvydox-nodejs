@@ -5,6 +5,7 @@
  */
 
 var request = require('request');
+var rp = require('request-promise-native');
 var fs = require('fs');
 var os = require('os');
 var guid = require('guid');
@@ -613,4 +614,121 @@ module.exports.getDocumentNotes = function(docid, completionHandler, errorHandle
 		var user = JSON.parse(body);
 		completionHandler(user);
 	});
+};
+
+module.exports.getPublishedStatus = async function(completionHandler, errorHandler) {
+	let options = {
+		uri: savvydox.sdurl("/views/published-status")
+	};
+
+	return rp(options)
+		.then(function (body) {
+			return JSON.parse(body);
+		});
+
+	// return rp(url, function(error, response, body)
+	// 	.then() {
+	// 	if (error || response.statusCode >= 400) {
+	// 		if (errorHandler) {
+	// 			errorHandler(error);
+	// 		}
+	// 		return;
+	// 	}
+
+	// 	var view = JSON.parse(body);
+	// 	completionHandler(view);
+	// });
+};
+
+module.exports.postDocumentDownloadedEvent = async function(docId, version) {
+	const payload = {
+		'document': docId,
+		'version': version
+	};
+
+	return savvydox.postEvent('document.downloaded', payload);
+};
+
+module.exports.postDocumentOpenedEvent = function(docId, version) {
+	const payload = {
+		'document': docId,
+		'version': version
+	};
+
+	return savvydox.postEvent('document.opened', payload);
+};
+
+module.exports.postDocumentClosedEvent = function(docId, version) {
+	const payload = {
+		'document': docId,
+		'version': version
+	};
+
+	return savvydox.postEvent('document.closed', payload);
+};
+
+module.exports.postPageOpenedEvent = function(docId, version, pageNum) {
+	const payload = {
+		'document': docId,
+		'version': version,
+		'page': pageNum
+	};
+
+	return savvydox.postEvent('document.page.opened', payload);
+};
+
+module.exports.postEvent = function(eventType, payload) {
+	const url = savvydox.sdurl("/events/");
+
+	const formData = {
+		'events': [
+			{
+				'eventType': eventType,
+				'timestamp': new Date().toISOString(),
+				'payload': payload
+			}
+		]
+	};
+
+	const postData = new FormData()
+	postData.append('events', JSON.stringify(formData));
+
+	const options = {
+		method: 'POST',
+		uri: savvydox.sdurl("/events/"),
+		headers: { 
+			'Accept': 'application/json',
+			'Content-Type': 'application/json' 
+		},
+		body: postData,
+		json: true
+	}
+
+	rp(options)
+		.then(function(resp) {
+			return true;
+		})
+		.catch(function(err) {
+			return(err);
+		});
+	// request.post({url: url, body: "events=" + JSON.stringify(formData), headers: {
+    //     'Content-Type': 'application/x-www-form-urlencoded',
+    // }}, function(error, response, body) {
+	// 	if (error || response.statusCode >= 400) {
+	// 		if (errorHandler) {
+	// 			if (error) {
+	// 				errorHandler(error);
+	// 			} else {
+	// 				errorHandler(response);
+	// 			}
+	// 		}
+	// 		return;
+	// 	}
+
+	// 	if (response.statusCode == 200) {
+	// 		completionHandler(response);
+	// 	} else {
+	// 		errorHandler(response);
+	// 	}
+	// });
 };
