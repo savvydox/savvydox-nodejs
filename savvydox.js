@@ -20,25 +20,30 @@ module.exports.sdurl = function(path) {
 
 var savvydox = module.exports;
 
-module.exports.login = function(host, login, password, completionHandler, errorHandler) {
+module.exports.login = async function(host, login, password, errorfunc) {
 	savvydox.host = host;
-	
-	request.post(module.exports.host + "2/login?clientApiVersion=2", {
-		'auth': { 'user': login, 'pass': password, 'sendImmediately': true } }, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				if (!error) {
-					error = "Response: " + response.statusCode;
-				}
-				errorHandler(error);
-			}
-			return;
-		}
 
-		savvydox.user = JSON.parse(body);
-		
-		completionHandler(JSON.parse(body));
-	});
+	const options = {
+		method: 'POST',
+		uri: module.exports.host + '2/login?clientApiVersion=2',
+		'auth': { 
+			'user': login, 
+			'pass': password, 
+			'sendImmediately': true
+		}
+	};
+
+	return rp(options)
+		.then(function(body) {
+			savvydox.user = JSON.parse(body);
+			return savvydox.user;
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
+		});
 };
 
 module.exports.register = function(host, login, password, email, completionHandler, errorHandler) {
@@ -125,7 +130,7 @@ module.exports.postDocument = function(document, contentPath, sourcePath, comple
 };
 
 // To attach source, pass in sourceInfo that has path, fileName, and contentType properties
-module.exports.postNewDocument = function(document, contentPath, sourceInfo, completionHandler, errorHandler) {	
+module.exports.postNewDocument = async function(document, contentPath, sourceInfo, errorfunc) {	
 	var formData = {
 		document: JSON.stringify(document), 
 		content: {
@@ -146,16 +151,22 @@ module.exports.postNewDocument = function(document, contentPath, sourceInfo, com
 			}
 		};
 	}
+	const options = {
+		method: 'POST',
+		uri: savvydox.sdurl("/documents"),
+		formData: formData
+	}
 
-	request.post({url: savvydox.sdurl("/documents"), formData: formData}, function(error, response, body) {
-		if (error) {
-			errorHandler(error);
-			return;
-		}
-
-		newdoc = JSON.parse(body);
-		completionHandler(newdoc);
-	});
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
+		});
 };
 	
 module.exports.downloadDocumentContent = function(document, path, completionHandler, errorHandler) {
@@ -522,51 +533,45 @@ module.exports.deleteCollection = function(collectionID, completionHandler, erro
 	});
 };
 
-module.exports.deleteDocument = function(documentID, completionHandler, errorHandler) {
-	var url = savvydox.sdurl("/documents/" + documentID);
+module.exports.deleteDocument = function(documentID, errorfunc) {
+	const options = {
+		method: 'DELETE',
+		uri: savvydox.sdurl("/documents/" + documentID),
+	}
 
-	request.del({url: url}, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				if (error) {
-					errorHandler(error);
-				} else {
-					errorHandler(response);
-				}
+	return rp(options)
+		.then(function(resp) {
+			return true;
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
 			}
-			return;
-		}
-
-		if (response.statusCode == 204) {
-			completionHandler(response);
-		} else {
-			errorHandler(response);
-		}
-	});
+			return false;
+		});
 };
 
-module.exports.postNotes = function(notes, completionHandler, errorHandler) {
-	var url = savvydox.sdurl("/notes");
-
-	var formData = {
+module.exports.postNotes = async function(notes, errorfunc) {
+	const formData = {
 		'note': JSON.stringify(notes)
 	};
 
-	request.post({url: url, formData: formData}, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				if (error) {
-					errorHandler(error);
-				} else {
-					errorHandler(response);
-				}
-			}
-			return;
-		}
+	const options = {
+		method: 'POST',
+		uri: savvydox.sdurl("/notes"),
+		formData: formData
+	}
 
-		var responseBody = JSON.parse(body);
-		completionHandler(responseBody);
-	});
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
+		});
 };
 
 module.exports.getNote = function(noteid, completionHandler, errorHandler) {
@@ -617,7 +622,7 @@ module.exports.getDocumentNotes = function(docid, completionHandler, errorHandle
 	});
 };
 
-module.exports.getPublishedStatus = async function(completionHandler, errorHandler) {
+module.exports.getPublishedStatus = async function(errorfunc) {
 	let options = {
 		uri: savvydox.sdurl("/views/published-status")
 	};
@@ -625,62 +630,53 @@ module.exports.getPublishedStatus = async function(completionHandler, errorHandl
 	return rp(options)
 		.then(function (body) {
 			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
 		});
-
-	// return rp(url, function(error, response, body)
-	// 	.then() {
-	// 	if (error || response.statusCode >= 400) {
-	// 		if (errorHandler) {
-	// 			errorHandler(error);
-	// 		}
-	// 		return;
-	// 	}
-
-	// 	var view = JSON.parse(body);
-	// 	completionHandler(view);
-	// });
 };
 
-module.exports.postDocumentDownloadedEvent = async function(docId, version) {
+module.exports.postDocumentDownloadedEvent = async function(docId, version, errorfunc) {
 	const payload = {
 		'document': docId,
 		'version': version
 	};
 
-	return savvydox.postEvent('document.downloaded', payload);
+	return savvydox.postEvent('document.downloaded', payload, errorfunc);
 };
 
-module.exports.postDocumentOpenedEvent = function(docId, version) {
+module.exports.postDocumentOpenedEvent = function(docId, version, errorfunc) {
 	const payload = {
 		'document': docId,
 		'version': version
 	};
 
-	return savvydox.postEvent('document.opened', payload);
+	return savvydox.postEvent('document.opened', payload, errorfunc);
 };
 
-module.exports.postDocumentClosedEvent = function(docId, version) {
+module.exports.postDocumentClosedEvent = function(docId, version, errorfunc) {
 	const payload = {
 		'document': docId,
 		'version': version
 	};
 
-	return savvydox.postEvent('document.closed', payload);
+	return savvydox.postEvent('document.closed', payload, errorfunc);
 };
 
-module.exports.postPageOpenedEvent = function(docId, version, pageNum) {
+module.exports.postPageOpenedEvent = function(docId, version, pageNum, errorfunc) {
 	const payload = {
 		'document': docId,
 		'version': version,
 		'page': pageNum
 	};
 
-	return savvydox.postEvent('document.page.opened', payload);
+	return savvydox.postEvent('document.page.opened', payload, errorfunc);
 };
 
-module.exports.postEvent = function(eventType, payload) {
-	const url = savvydox.sdurl("/events/");
-
+module.exports.postEvent = function(eventType, payload, errorfunc) {
 	const formData = {
 		'events': [
 			{
@@ -691,45 +687,30 @@ module.exports.postEvent = function(eventType, payload) {
 		]
 	};
 
-	const postData = new FormData()
-	postData.append('events', JSON.stringify(formData));
-
 	const options = {
 		method: 'POST',
 		uri: savvydox.sdurl("/events/"),
-		headers: { 
-			'Accept': 'application/json',
-			'Content-Type': 'application/json' 
-		},
-		body: postData,
-		json: true
+		formData: {
+			'events': JSON.stringify(formData)
+		}
 	}
 
-	rp(options)
+	return rp(options)
 		.then(function(resp) {
 			return true;
 		})
 		.catch(function(err) {
-			return(err);
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return false;
 		});
-	// request.post({url: url, body: "events=" + JSON.stringify(formData), headers: {
-    //     'Content-Type': 'application/x-www-form-urlencoded',
-    // }}, function(error, response, body) {
-	// 	if (error || response.statusCode >= 400) {
-	// 		if (errorHandler) {
-	// 			if (error) {
-	// 				errorHandler(error);
-	// 			} else {
-	// 				errorHandler(response);
-	// 			}
-	// 		}
-	// 		return;
-	// 	}
+};
 
-	// 	if (response.statusCode == 200) {
-	// 		completionHandler(response);
-	// 	} else {
-	// 		errorHandler(response);
-	// 	}
-	// });
+module.exports.sleep = async function(ms) {
+	return new Promise((resolve) => {
+		setTimeout(() => {
+			resolve(true);
+		}, ms)
+	})
 };
