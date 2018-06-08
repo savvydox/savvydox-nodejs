@@ -1,6 +1,6 @@
 {
   "name": "savvydox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SavvyDox Scripting Support for Node.js",
   "main": "savvydox.js",
   "scripts": {
@@ -22,6 +22,7 @@
   "dependencies": {
     "form-data": "^2.3.2",
     "guid": "0.0.12",
-    "request": "2.60.0"
+    "request": "2.60.0",
+    "request-promise-native": "^1.0.5"
   }
 }
