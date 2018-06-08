@@ -6,6 +6,7 @@
 
 var request = require('request');
 var rp = require('request-promise-native');
+var FormData = require('form-data');
 var fs = require('fs');
 var os = require('os');
 var guid = require('guid');
