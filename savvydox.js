@@ -46,46 +46,53 @@ module.exports.login = async function(host, login, password, errorfunc) {
 		});
 };
 
-module.exports.register = function(host, login, password, email, completionHandler, errorHandler) {
+module.exports.register = async function(host, login, password, email, errorfunc) {
 	savvydox.host = host;
 	
 	var formData = {
 		'user': JSON.stringify({ 'loginName': login, 'password': password, 'primaryEmail':email })
 	};
 
-	request.post({ 'url': module.exports.host + "2/registeruser?clientApiVersion=2", 
-		formData: formData, },
-		function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				if (!error) {
-					error = "Response: " + response.statusCode;
-				}
-				errorHandler(error);
-			}
-			return;
-		}
+	const options = {
+		method: 'POST',
+		uri: module.exports.host + '2/registeruser?clientApiVersion=2',
+		formData: formData
+	};
 
-		savvydox.user = JSON.parse(body);
-		
-		completionHandler(JSON.parse(body));
-	});
+	return rp(options)
+		.then(function(body) {
+			savvydox.user = JSON.parse(body);
+			return savvydox.user;
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
+		});
 };
 
-module.exports.getServerInfo = function(completionHandler, errorHandler, detailLevel) {
+module.exports.getServerInfo = async function(errorfunc, detailLevel) {
 	var url = module.exports.host + "2/serverinfo";
 	if (detailLevel) {
 		url += "?details=" + detailLevel;
 	}
 
-	request.get(url, function(error, response, body) {
-		if (error) {
-			errorHandler(error);
-			return;
-		}
-		
-		completionHandler(JSON.parse(body));	
-	});
+	const options = {
+		method: 'GET',
+		uri: url
+	};
+
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return undefined;
+		});
 };
 
 module.exports.postDocument = function(document, contentPath, sourcePath, completionHandler, errorHandler) {
@@ -114,7 +121,7 @@ module.exports.postDocument = function(document, contentPath, sourcePath, comple
 				}
 			};
 		}
-
+	
 		request.post({url: docurl, formData: formData}, function(error, response, body) {
 			if (error) {
 				if (errorHandler) {
@@ -197,21 +204,22 @@ module.exports.downloadDocumentContent = function(document, path, completionHand
 	});
 };
 	
-module.exports.getUser = function(userid, completionHandler, errorHandler) {
-	var meurl = savvydox.sdurl("/users/" + userid);
+module.exports.getUser = function(userid, errorfunc) {
+	const options = {
+		method: 'GET',
+		uri: savvydox.sdurl("/users/" + userid)
+	};
 
-	// Part one - gather information including the user, event, and document that we're working with
-	request(meurl, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				errorHandler(error);
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
 			}
-			return;
-		}
-
-		var user = JSON.parse(body);
-		completionHandler(user);
-	});
+			return undefined;
+		});
 };
 	
 module.exports.getEvent = function(eventid, completionHandler, errorHandler) {
@@ -574,52 +582,76 @@ module.exports.postNotes = async function(notes, errorfunc) {
 		});
 };
 
-module.exports.getNote = function(noteid, completionHandler, errorHandler) {
-	var url = savvydox.sdurl("/notes/" + noteid);
+module.exports.getNote = async function(noteid, errorfunc) {
+	const options = {
+		method: 'GET',
+		uri: savvydox.sdurl("/notes/" + noteid)
+	};
 
-	request(url, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				errorHandler(error);
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
 			}
-			return;
-		}
-
-		var user = JSON.parse(body);
-		completionHandler(user);
-	});
+			return undefined;
+		});
 };
 
-module.exports.getNotes = function(completionHandler, errorHandler) {
-	var url = savvydox.sdurl("/notes");
+module.exports.getNotes = async function(errorfunc) {
+	const options = {
+		method: 'GET',
+		uri: savvydox.sdurl("/notes")
+	};
 
-	request(url, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				errorHandler(error);
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
 			}
-			return;
-		}
-
-		var user = JSON.parse(body);
-		completionHandler(user);
-	});
+			return undefined;
+		});
 };
 
-module.exports.getDocumentNotes = function(docid, completionHandler, errorHandler) {
-	var url = savvydox.sdurl("/documents/" + docid + "/notes");
+module.exports.getDocumentNotes = async function(docid, errorfunc) {
+	const options = {
+		method: 'GET',
+		uri: savvydox.sdurl("/documents/" + docid + "/notes")
+	};
 
-	request(url, function(error, response, body) {
-		if (error || response.statusCode >= 400) {
-			if (errorHandler) {
-				errorHandler(error);
+	return rp(options)
+		.then(function(body) {
+			return JSON.parse(body);
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
 			}
-			return;
-		}
+			return undefined;
+		});
+};
 
-		var user = JSON.parse(body);
-		completionHandler(user);
-	});
+module.exports.deleteNote = async function(noteId, errorfunc) {
+	const options = {
+		method: 'DELETE',
+		uri: savvydox.sdurl('/notes/' + noteId)
+	};
+
+	return rp(options)
+		.then(function(body) {
+			return true;
+		})
+		.catch(function(err) {
+			if (errorfunc) {
+				errorfunc(err);
+			}
+			return false;
+		});
 };
 
 module.exports.getPublishedStatus = async function(errorfunc) {

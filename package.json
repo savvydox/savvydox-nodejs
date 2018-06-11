@@ -1,6 +1,6 @@
 {
   "name": "savvydox",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "SavvyDox Scripting Support for Node.js",
   "main": "savvydox.js",
   "scripts": {
