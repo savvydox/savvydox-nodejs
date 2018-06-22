@@ -506,6 +506,38 @@ module.exports.postPageOpenedEvent = function(docId, version, pageNum, errorfunc
 	return savvydox.postEvent('document.page.opened', payload, errorfunc);
 };
 
+module.exports.postReviewedEvent = function(docId, version, errorfunc) {
+	const payload = {
+		'document': docId,
+		'version': version,
+		'reviewed': true
+	};
+
+	return savvydox.postEvent('document.reviewed', payload, errorfunc);
+};
+
+module.exports.postApprovedEvent = function(docId, version, message, errorfunc) {
+	const payload = {
+		'document': docId,
+		'version': version,
+        'approved': 'approved',
+        'message': message
+	};
+
+	return savvydox.postEvent('document.approved', payload, errorfunc);
+};
+
+module.exports.postRejectedEvent = function(docId, version, message, errorfunc) {
+	const payload = {
+		'document': docId,
+		'version': version,
+		'approved': 'rejected',
+        'message': message
+	};
+
+	return savvydox.postEvent('document.approved', payload, errorfunc);
+};
+
 module.exports.postEvent = function(eventType, payload, errorfunc) {
 	const formData = {
 		'events': [
