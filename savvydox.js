@@ -461,9 +461,15 @@ module.exports.deleteNote = function(noteId, errorfunc) {
     return savvydox.rpWithoutResponse(options, errorfunc);
 };
 
-module.exports.getPublishedStatus = function(errorfunc) {
+module.exports.getPublishedStatus = function(docId, errorfunc) {
+    let uri = '/views/published-status';
+
+    if (docId) {
+        uri += '/' + docId;
+    }
+
 	let options = {
-		uri: savvydox.sdurl("/views/published-status")
+		uri: savvydox.sdurl(uri)
 	};
 
     return savvydox.rpWithResponse(options, errorfunc);
