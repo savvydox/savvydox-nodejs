@@ -188,7 +188,7 @@ module.exports.downloadDocumentContent = function(document, path, completionHand
 	var contenturl = savvydox.sdurl("/documents/" + document.id + "/content");
 	var contentpath = path + "/content.pdf";
 	var file = fs.createWriteStream(contentpath)
-	var req = request(contenturl).pipe(file);
+	var req = request.get(contenturl).auth(null, null, true, savvydox.user.accessToken).pipe(file);
 	file.on('finish', function() {
 		// If the document has source associated with it, we need to download that
 		if (document.hasOwnProperty("source")) {
@@ -202,7 +202,7 @@ module.exports.downloadDocumentContent = function(document, path, completionHand
 
 			var srcdest = path + "/" + srcfn;
 			var srcfile = fs.createWriteStream(srcdest)
-			var srcreq = request(srcurl).pipe(srcfile);
+			var srcreq = request.get(srcurl).auth(null, null, true, savvydox.user.accessToken).pipe(srcfile);
 			srcfile.on('finish', function() {
 				completionHandler(contentpath, srcdest);
 			});
@@ -222,7 +222,7 @@ module.exports.getUser = function(userid, errorfunc) {
 };
 	
 module.exports.getEvent = function(eventid, completionHandler, errorHandler) {
-	request(eventurl, function(error, response, body) {
+	request.get(eventurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
 				errorHandler(error);
@@ -233,7 +233,7 @@ module.exports.getEvent = function(eventid, completionHandler, errorHandler) {
 		var events = JSON.parse(body);
 		var event = events.events[0];
 		completionHandler(event);
-	});
+	}).auth(null, null, true, savvydox.user.accessToken);
 };
 	
 module.exports.getDocument = function(documentid, errorfunc) {
@@ -282,7 +282,7 @@ module.exports.getDocumentTasks = function(documentid, completionHandler, errorH
 	var tasksurl = savvydox.sdurl("/usertasks/document/" + event.payload.document);
 	tasksurl += "?format=decompose";
 
-	request(tasksurl, function(error, response, body) {
+	request.get(tasksurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
 				errorHandler(error);
@@ -291,7 +291,7 @@ module.exports.getDocumentTasks = function(documentid, completionHandler, errorH
 		}
 
 		completionHandler(tasks);
-	});
+	}).auth(null, null, true, savvydox.user.accessToken);
 };
 
 module.exports.getMyGroups = function(errorfunc) {
@@ -412,7 +412,7 @@ module.exports.addDocumentToCollection = function(documentID, collectionID, comp
 		} else {
 			errorHandler(response);
 		}
-	});
+	}).auth(null, null, true, savvydox.user.accessToken);
 };
 
 module.exports.removeDocumentFromCollection = function(documentID, collectionID, errorfunc) {
