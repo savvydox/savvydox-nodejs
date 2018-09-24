@@ -11,10 +11,22 @@ var fs = require('fs');
 var os = require('os');
 var guid = require('guid');
 
+function addAuthHeaders(options, savvydox) {
+	if (savvydox.user && savvydox.user.accessToken) {
+		if (options.headers) {
+			options.headers['Authorization'] = 'Bearer ' + savvydox.user.accessToken;
+		} else {
+			options.headers = {
+				'Authorization': 'Bearer ' + savvydox.user.accessToken
+			}
+		}
+	}
+}
+
 module.exports = {};
 
 module.exports.sdurl = function(path) {
-	var url = module.exports.host + "2" + path + "?accessToken=" + module.exports.user.accessToken;
+	var url = module.exports.host + "2" + path;
 	return url;
 };
 
@@ -37,6 +49,23 @@ module.exports.login = function(host, login, password, errorfunc) {
         savvydox.user = user;
         return savvydox.user;
     });
+};
+
+module.exports.token = function(host, login, password, errorfunc) {
+	const options = {
+		method: 'POST',
+		url: module.exports.host + '2/oauth2/token',
+		form: {
+			'username': login, 
+			'password': password, 
+			'grant_type': 'password'
+			}
+	}
+
+	return savvydox.rpWithResponse(options, errorfunc).then((response) => {
+		savvydox.accessToken = response.accessToken;
+		return response;
+	});
 };
 
 module.exports.register = function(host, login, password, email, errorfunc) {
@@ -79,7 +108,9 @@ module.exports.postDocument = function(document, contentPath, sourcePath, errorf
 		method: 'GET',
 		uri: docurl
     };
-    
+	
+	addAuthHeaders(options, savvydox);
+
 	return rp(options)
 		.then(function(body) {
             var formData = {
@@ -225,7 +256,7 @@ module.exports.getCollections = function(errorfunc) {
 			
 module.exports.getDocumentRecipients = function(documentid, errorfunc) {
 	var recipurl = savvydox.sdurl("/documents/" + documentid + "/recipients");
-    recipurl += "&format=decompose";
+    recipurl += "?format=decompose";
     
     const options = {
 		method: 'GET',
@@ -237,7 +268,7 @@ module.exports.getDocumentRecipients = function(documentid, errorfunc) {
 			
 module.exports.getCollectionRecipients = function(collectionid, errorfunc) {
 	var recipurl = savvydox.sdurl("/collections/" + collectionid + "/recipients");
-	recipurl += "&format=decompose";
+	recipurl += "?format=decompose";
     
     const options = {
 		method: 'GET',
@@ -249,7 +280,7 @@ module.exports.getCollectionRecipients = function(collectionid, errorfunc) {
 
 module.exports.getDocumentTasks = function(documentid, completionHandler, errorHandler) {
 	var tasksurl = savvydox.sdurl("/usertasks/document/" + event.payload.document);
-	tasksurl += "&format=decompose";
+	tasksurl += "?format=decompose";
 
 	request(tasksurl, function(error, response, body) {
 		if (error || response.statusCode >= 400) {
@@ -575,6 +606,8 @@ module.exports.sleep = function(ms) {
 };
 
 module.exports.rpWithResponse = function(options, errorfunc) {
+	addAuthHeaders(options, savvydox);
+
 	return rp(options)
 		.then(function(body) {
 			return JSON.parse(body);
@@ -588,6 +621,8 @@ module.exports.rpWithResponse = function(options, errorfunc) {
 };
 
 module.exports.rpWithoutResponse = function(options, errorfunc) {
+	addAuthHeaders(options, savvydox);
+
     return rp(options)
         .then(function(resp) {
             return true;
