@@ -393,9 +393,16 @@ module.exports.addDocumentToCollection = function(documentID, collectionID, comp
 		'document': documentID
 	};
 
-	request.post({url: url, body: "document=" + JSON.stringify(formData), headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }}, function(error, response, body) {
+	const options = {
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		}
+	}
+	
+	addAuthHeaders(options, savvydox)
+
+	request.post({url: url, body: "document=" + JSON.stringify(formData), headers: options.headers}, 
+		function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
 				if (error) {
@@ -492,9 +499,15 @@ module.exports.deleteNote = function(noteId, errorfunc) {
     return savvydox.rpWithoutResponse(options, errorfunc);
 };
 
-module.exports.getPublishedStatus = function(errorfunc) {
+module.exports.getPublishedStatus = function(docId, errorfunc) {
+    let uri = '/views/published-status';
+
+    if (docId) {
+        uri += '/' + docId;
+    }
+
 	let options = {
-		uri: savvydox.sdurl("/views/published-status")
+		uri: savvydox.sdurl(uri)
 	};
 
     return savvydox.rpWithResponse(options, errorfunc);
