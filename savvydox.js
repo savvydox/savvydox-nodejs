@@ -393,9 +393,16 @@ module.exports.addDocumentToCollection = function(documentID, collectionID, comp
 		'document': documentID
 	};
 
-	request.post({url: url, body: "document=" + JSON.stringify(formData), headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }}, function(error, response, body) {
+	const options = {
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		}
+	}
+	
+	addAuthHeaders(options, savvydox)
+
+	request.post({url: url, body: "document=" + JSON.stringify(formData), headers: options.headers}, 
+		function(error, response, body) {
 		if (error || response.statusCode >= 400) {
 			if (errorHandler) {
 				if (error) {
